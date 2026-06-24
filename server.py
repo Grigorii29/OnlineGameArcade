@@ -46,5 +46,11 @@ def get_coord_player_2():
 
 
 app.register_blueprint(blueprint)
+
+
+def main():
+    app.run(host='0.0.0.0', port=8080)
+
+
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8080)
+    main()

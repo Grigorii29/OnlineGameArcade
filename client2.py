@@ -3,8 +3,8 @@ import arcade
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
-TITLE = 'Онлайн игра'
-server_address = 'http://127.0.0.1:8080'
+TITLE = 'Online Game player2'
+server_address = 'http://192.168.0.106:8080'
 UPDATE_TIME = 0.05
 
 
@@ -25,7 +25,6 @@ class Client2(arcade.View):
             self.pl1_x = response['x']
             self.pl1_y = response['y']
             # print(self.pl1_x, self.pl1_y)
-            print(self.pl1_y)
         except Exception:
             pass
 
@@ -42,6 +41,16 @@ class Client2(arcade.View):
         self.clear()
         arcade.draw_circle_filled(self.pl1_x, self.pl1_y, 20, arcade.color.SKY_BLUE)
         arcade.draw_circle_filled(self.pl2_x, self.pl2_y, 15, arcade.color.GREEN)
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.UP:
+            self.pl2_y += 2
+        elif key == arcade.key.DOWN:
+            self.pl2_y -= 2
+        elif key == arcade.key.LEFT:
+            self.pl2_x -= 2
+        elif key == arcade.key.RIGHT:
+            self.pl2_x += 2
 
 
 def main():
