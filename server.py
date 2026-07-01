@@ -1,7 +1,7 @@
 from flask import Flask, Blueprint, jsonify, request
 
 app = Flask(__name__)
-player_1 = [0, 0]
+player_1 = [0, 420]
 player_2 = [0, 0]
 blueprint = Blueprint(
     'players',
