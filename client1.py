@@ -7,6 +7,7 @@ from Classes.Tanks import GreenTank
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
 
+
 class Client1(arcade.View):
     def __init__(self):
         super().__init__()
@@ -20,7 +21,8 @@ class Client1(arcade.View):
         self.players_list = arcade.SpriteList()
         self.players_list.append(self.player_1)
         self.map_setup()
-
+        self.accel = False  # Флаг ускорения
+        self.forward = False  # Флаг для направления ускорения
 
     def get_coord(self, delta_t):  # Клиент 1, поэтому принимаю координаты второго, отправляю свои
         try:
@@ -50,15 +52,31 @@ class Client1(arcade.View):
         self.engine.update()
         self.player_1.change_y -= 1
         self.players_list.update(delta_t)
-
+        self.update_speed()
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.LEFT:
-            self.player_1.change_x = -2
+            self.accel = True
+            self.forward = False
         elif key == arcade.key.RIGHT:
-            self.player_1.change_x = 2
-        # if key == arcade.key.UP:
-        #     self.player_1.change_y = 10
+            self.accel = True
+            self.forward = True
+
+    def on_key_release(self, key, modifiers):
+        if key in [arcade.key.LEFT, arcade.key.RIGHT]:
+            self.accel = False
+
+    def update_speed(self):
+        if self.accel and self.forward and abs(self.player_1.change_x) < 3:
+            self.player_1.change_x += SPEED_DELTA
+        elif self.accel and not self.forward and abs(self.player_1.change_x) < 3:
+            self.player_1.change_x -= SPEED_DELTA
+        if self.accel is False and self.player_1.change_x > 0:
+            self.player_1.change_x -= SPEED_DELTA
+        elif self.accel is False and self.player_1.change_x < 0:
+            self.player_1.change_x += SPEED_DELTA
+        if 0 < abs(self.player_1.change_x) <= 0.05:
+            self.player_1.change_x = 0
 
     def map_setup(self):
         tile_map = arcade.load_tilemap('Files/map_for_tanks.tmx', scaling=1)
