@@ -2,7 +2,7 @@ from flask import Flask, Blueprint, jsonify, request
 
 app = Flask(__name__)
 player_1 = [0, 420]
-player_2 = [0, 0]
+player_2 = [100, 450]
 blueprint = Blueprint(
     'players',
     __name__,
@@ -24,7 +24,6 @@ def return_coord_player1():
 def get_coord_player_1():
     global player_1
     player_1 = [request.json['x'], request.json['y']]
-    print(player_1)
     return jsonify({"Status": 'OK'})
 
 

@@ -2,7 +2,7 @@ import requests
 import arcade
 
 from Classes.CONSTANTES import *
-from Classes.Tanks import GreenTank
+from Classes.Tanks import GreenTank, GrayTank
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -11,15 +11,15 @@ with open('Screen size.txt') as f:
 class Client1(arcade.View):
     def __init__(self):
         super().__init__()
-        self.pl1_x = 100
-        self.pl1_y = 420
-        self.pl2_x = 0
-        self.pl2_y = 0
         arcade.schedule(self.get_coord, UPDATE_TIME)
         arcade.schedule(self.post_coord, UPDATE_TIME)
-        self.player_1 = GreenTank(self.pl1_x, self.pl1_y, self)
-        self.players_list = arcade.SpriteList()
+
+        self.players_list = arcade.SpriteList()  # Создаем спрайтлист, танки, добавляем их в список
+        self.player_1 = GreenTank(100, 420, self)
+        self.player_2 = GrayTank(0, 0, self)
         self.players_list.append(self.player_1)
+        self.players_list.append(self.player_2)
+
         self.map_setup()
         self.accel = False  # Флаг ускорения
         self.forward = False  # Флаг для направления ускорения
@@ -35,16 +35,15 @@ class Client1(arcade.View):
     def get_coord(self, delta_t):  # Клиент 1, поэтому принимаю координаты второго, отправляю свои
         try:
             response = requests.get(server_address + '/player2').json()
-            self.pl2_x = response['x']
-            self.pl2_y = response['y']
+            self.player_2.center_x, self.player_2.center_y = response['x'], response['y']
         except Exception:
             pass
 
     def post_coord(self, delta_t):
         try:
             response = requests.post(server_address + '/player1', json={
-                'x': self.pl1_x,
-                'y': self.pl1_y
+                'x': self.player_1.center_x,
+                'y': self.player_1.center_y
             })
         except Exception:
             pass
@@ -56,11 +55,10 @@ class Client1(arcade.View):
         self.land_list.draw()
         self.details_list.draw()
         self.players_list.draw()
-        arcade.draw_circle_filled(self.pl2_x, self.pl2_y, 20, arcade.color.SKY_BLUE)
 
     def on_update(self, delta_t):
         self.engine.update()
-        self.player_1.change_y -= 1
+        self.player_1.change_y -= GRAVITY
         self.players_list.update(delta_t)
         self.update_speed()
         self.camera_update(delta_t)
@@ -77,19 +75,28 @@ class Client1(arcade.View):
         if key in [arcade.key.LEFT, arcade.key.RIGHT]:
             self.accel = False
 
-    def update_speed(self):
+    def update_speed(self):  # Функия для расчета текущей скорости в зависимости от зажатых клавиш
         if self.player_1.center_x < 10:
             self.player_1.change_x = 0
             self.player_1.center_x = 10
+
+        elif self.player_1.center_x > 8390:
+            self.player_1.change_x = 0
+            self.player_1.center_x = 8390
+
         else:
             if self.accel and self.forward and abs(self.player_1.change_x) < 3:
                 self.player_1.change_x += SPEED_DELTA
+
             elif self.accel and not self.forward and abs(self.player_1.change_x) < 3:
                 self.player_1.change_x -= SPEED_DELTA
+
             if self.accel is False and self.player_1.change_x > 0:
                 self.player_1.change_x -= SPEED_DELTA
+
             elif self.accel is False and self.player_1.change_x < 0:
                 self.player_1.change_x += SPEED_DELTA
+
             if 0 < abs(self.player_1.change_x) <= 0.05:
                 self.player_1.change_x = 0
 
@@ -125,15 +132,18 @@ class Client1(arcade.View):
         self.cam_target = (smooth_x, smooth_y)
 
         self.camera.position = (self.cam_target[0], self.cam_target[1])
+
     def map_setup(self):
         tile_map = arcade.load_tilemap('Files/map_for_tanks.tmx', scaling=1)
         self.collision_list = tile_map.sprite_lists['collision']
         self.details_list = tile_map.sprite_lists['details']
         self.land_list = tile_map.sprite_lists['Land']
         arcade.set_background_color(arcade.color.SKY_BLUE)
-        self.engine = arcade.PhysicsEngineSimple(self.player_1, self.collision_list)
         self.world_width = int(tile_map.width * tile_map.tile_width)
         self.world_height = int(tile_map.height * tile_map.tile_height)
+
+        # ! Подключаем простой движок к текущему игроку
+        self.engine = arcade.PhysicsEngineSimple(self.player_1, self.collision_list)
 
 
 def main():
