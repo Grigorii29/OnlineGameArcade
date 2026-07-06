@@ -57,8 +57,8 @@ class Client2(arcade.View):
         self.clear()
         self.camera_shake.update_camera()  # Запчасть от тряски камеры
         self.camera.use()
-        self.land_list.draw()
         self.details_list.draw()
+        self.land_list.draw()
         self.players_list.draw()
 
     def on_update(self, delta_t):

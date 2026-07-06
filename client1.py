@@ -3,6 +3,7 @@ import arcade
 
 from Classes.CONSTANTES import *
 from Classes.Tanks import GreenTank, GrayTank
+from Classes.Bullets import Bullet
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -14,11 +15,15 @@ class Client1(arcade.View):
         arcade.schedule(self.get_coord, UPDATE_TIME)
         arcade.schedule(self.post_coord, UPDATE_TIME)
 
+
         self.players_list = arcade.SpriteList()  # Создаем спрайтлист, танки, добавляем их в список
         self.player_1 = GreenTank(100, 420, self)
         self.player_2 = GrayTank(0, 0, self)
         self.players_list.append(self.player_1)
         self.players_list.append(self.player_2)
+
+        self.bullets_list = arcade.SpriteList()
+
 
         self.map_setup()
         self.accel = False  # Флаг ускорения
@@ -52,9 +57,10 @@ class Client1(arcade.View):
         self.clear()
         self.camera_shake.update_camera()  # Запчасть от тряски камеры
         self.camera.use()
-        self.land_list.draw()
         self.details_list.draw()
+        self.land_list.draw()
         self.players_list.draw()
+        self.bullets_list.draw()
 
     def on_update(self, delta_t):
         self.engine.update()
@@ -62,6 +68,7 @@ class Client1(arcade.View):
         self.players_list.update(delta_t)
         self.update_speed()
         self.camera_update(delta_t)
+        self.bullets_list.update()
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.LEFT:
@@ -70,6 +77,15 @@ class Client1(arcade.View):
         elif key == arcade.key.RIGHT:
             self.accel = True
             self.forward = True
+        elif key == arcade.key.SPACE:
+            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 45, self.player_1.change_x)
+            self.bullets_list.append(bullet)
+            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 60, self.player_1.change_x)
+            self.bullets_list.append(bullet)
+            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 30, self.player_1.change_x)
+            self.bullets_list.append(bullet)
+            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 90, self.player_1.change_x)
+            self.bullets_list.append(bullet)
 
     def on_key_release(self, key, modifiers):
         if key in [arcade.key.LEFT, arcade.key.RIGHT]:

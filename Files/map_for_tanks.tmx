@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-down" width="120" height="22" tilewidth="70" tileheight="70" infinite="0" nextlayerid="4" nextobjectid="1">
+ <tileset firstgid="1" source="land for tank's.tsx"/>
+ <layer id="2" name="details" width="120" height="22">
+  <data encoding="base64" compression="zlib">
+   eJzt0UEJACAURMFNIxjATPZvoPBvFlBhBt59YRMAAAAAAAAA4Hdt12+PICP1BVDmEcBLFjA3Akc=
+  </data>
+ </layer>
+ <layer id="3" name="collision" width="120" height="22" visible="0">
+  <data encoding="base64" compression="zlib">
+   eJzt1csJgDAURNFZWoplTKmWqiJZGBJEDPl5D7yNizB5IyoBAAAAAAAAAAAAbfiYJTHH861ZKBRhXV2mjNSxNU7WWqx8t8EIHVt8c2LWc7dBz3uz7vcolTWce8769bCE1P+w9PSWJ9eNX96jVtZau59J3LH1733MiHcdo9sBEq8OWQ==
+  </data>
+ </layer>
+ <layer id="1" name="Land" width="120" height="22">
+  <data encoding="base64" compression="zlib">
+   eJzt1U0KgzAQhuFs694D9GYuPVK7y1GdoQohxL86iZ3yPvBtBHUmH2IIAAAAAAAAAAAAwD2ekrGQx51DwYR220vehbyCn451Dy+ztrLVraeOlz0k8ddnbeVItx46zvew6jj9Z9XYvfQ/tMzRbtOOa8+0dpZybTizh3ZseT41ds9mjnO2OohfZu/+q88/lfz7027lfIdW728Yq/7cRTvuZOfu8+38Y7eW/V69n1TIBEL76Bc=
+  </data>
+ </layer>
+</map>
