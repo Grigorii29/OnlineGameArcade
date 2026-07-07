@@ -6,12 +6,14 @@ from Classes.Tanks import GreenTank, GrayTank
 from Classes.Bullets import Bullet
 
 with open('Screen size.txt') as f:
+    print(False * False)
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
 
 
 class Client1(arcade.View):
     def __init__(self):
         super().__init__()
+        self.attack = False # Флаг состояния атака или нет.
         arcade.schedule(self.get_coord, UPDATE_TIME)
         arcade.schedule(self.post_coord, UPDATE_TIME)
 
@@ -71,20 +73,21 @@ class Client1(arcade.View):
         self.bullets_list.update()
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.LEFT:
-            self.accel = True
-            self.forward = False
-        elif key == arcade.key.RIGHT:
-            self.accel = True
-            self.forward = True
-        elif key == arcade.key.SPACE:
+        if key == arcade.key.F:
+            if self.attack:
+                self.attack = False
+            else:
+                self.attack = True
+                self.accel = False
+        if not self.attack:
+            if key == arcade.key.LEFT:
+                self.accel = True
+                self.forward = False
+            elif key == arcade.key.RIGHT:
+                self.accel = True
+                self.forward = True
+        if key == arcade.key.SPACE and self.attack:
             bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 45, self.player_1.change_x)
-            self.bullets_list.append(bullet)
-            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 60, self.player_1.change_x)
-            self.bullets_list.append(bullet)
-            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 30, self.player_1.change_x)
-            self.bullets_list.append(bullet)
-            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 90, self.player_1.change_x)
             self.bullets_list.append(bullet)
 
     def on_key_release(self, key, modifiers):
@@ -118,6 +121,7 @@ class Client1(arcade.View):
 
     def camera_update(self, delta_t):
         self.camera_shake.update(delta_t)
+
         cam_x, cam_y = self.camera.position
         dz_left = cam_x - DEAD_ZONE_W // 2
         dz_right = cam_x + DEAD_ZONE_W // 2

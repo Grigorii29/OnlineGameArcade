@@ -1,13 +1,13 @@
 import arcade
 from .CONSTANTES import *
-from math import cos, sin, radians
+from math import cos, sin, radians, acos, degrees
 
 
 class Bullet(arcade.Sprite):
     def __init__(self, x, y, game, angle, player_speed_x):
         super().__init__()
         self.speed = 10
-        self.angle = angle
+        self.angle = self.angle
         self.texture = arcade.load_texture("Files/Bullets images/Bullet0.png")
         self.center_x, self.center_y = x, y
         self.game = game
@@ -19,6 +19,10 @@ class Bullet(arcade.Sprite):
 
     def update(self, delta_t):
         upd = self.engine.update()
-        self.change_y -= GRAVITY
         if upd:
             self.remove_from_sprite_lists()
+        current_speed = (self.change_x ** 2 + self.change_y ** 2) ** 0.5 # Расчёт текущей скорости, чтобы определить угол
+        self.angle = degrees(acos(self.change_x / current_speed))
+        if self.change_y > 0:
+            self.angle *= -1
+        self.change_y -= GRAVITY
