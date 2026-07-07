@@ -1,8 +1,11 @@
+from urllib.request import proxy_bypass_registry
+
 from flask import Flask, Blueprint, jsonify, request
 
 app = Flask(__name__)
-player_1 = [0, 420]
-player_2 = [100, 450]
+player_1 = [0, 420, 1000]
+player_2 = [100, 450, 1000]
+bullets_from_player_1 = []
 blueprint = Blueprint(
     'players',
     __name__,
@@ -42,6 +45,14 @@ def get_coord_player_2():
     global player_2
     player_2 = [request.json['x'], request.json['y']]
     return jsonify({'Status': 'OK'})
+
+
+@blueprint.route('/bullets_from_player_1', methods=['POST'])
+def bullets_player_1():
+    global bullets_from_player_1
+    print(request.json)
+    return jsonify({'Status': 'OK'})
+
 
 
 app.register_blueprint(blueprint)

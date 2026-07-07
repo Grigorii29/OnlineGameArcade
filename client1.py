@@ -6,16 +6,16 @@ from Classes.Tanks import GreenTank, GrayTank
 from Classes.Bullets import Bullet
 
 with open('Screen size.txt') as f:
-    print(False * False)
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
 
 
 class Client1(arcade.View):
     def __init__(self):
         super().__init__()
-        self.attack = False # Флаг состояния атака или нет.
+        self.attack = False  # Флаг состояния атака или нет.
         arcade.schedule(self.get_coord, UPDATE_TIME)
         arcade.schedule(self.post_coord, UPDATE_TIME)
+        # arcade.schedule(self.post_rocket, UPDATE_TIME)
 
         self.players_list = arcade.SpriteList()  # Создаем спрайтлист, танки, добавляем их в список
         self.player_1 = GreenTank(100, 420, self)
@@ -24,8 +24,14 @@ class Client1(arcade.View):
         self.players_list.append(self.player_2)
 
         self.bullets_list = arcade.SpriteList()
-        self.blast_list = arcade.SpriteList() # Список анимаций взрывов
+        self.blast_list = arcade.SpriteList()  # Список анимаций взрывов
+        self.bullets_list_to_server = []
 
+        self.aim = arcade.Sprite('Files/arrow.png')
+        self.aim.alpha = 0
+        self.aim.scale = 0.3
+        self.aim_list = arcade.SpriteList()
+        self.aim_list.append(self.aim)
 
         self.map_setup()
         self.accel = False  # Флаг ускорения
@@ -55,6 +61,17 @@ class Client1(arcade.View):
         except Exception:
             pass
 
+    # def post_rocket(self, delta_t):
+    #     sp = [el for el in self.bullets_list if not el.sent]
+    #     for el in sp:
+    #         el.sent = True
+    #
+    #     try:
+    #         response - requests.post(server_address + '/bullets_from_player_1',json={
+    #             'rockets':
+    #                 [(el.center_x, el.center_y)]
+    #         })
+
     def on_draw(self):
         self.clear()
         self.camera_shake.update_camera()  # Запчасть от тряски камеры
@@ -62,6 +79,7 @@ class Client1(arcade.View):
         self.details_list.draw()
         self.land_list.draw()
         self.players_list.draw()
+        self.aim_list.draw()
         self.bullets_list.draw()
         self.blast_list.draw()
 
@@ -78,9 +96,13 @@ class Client1(arcade.View):
         if key == arcade.key.F:
             if self.attack:
                 self.attack = False
+                self.aim.alpha = 0
             else:
                 self.attack = True
                 self.accel = False
+                self.aim.alpha = 255 # Обработка появления прицела
+                self.aim.center_x = self.player_1.center_x + 40
+                self.aim.center_y = self.player_1.center_y + 30
         if not self.attack:
             if key == arcade.key.LEFT:
                 self.accel = True
@@ -89,8 +111,17 @@ class Client1(arcade.View):
                 self.accel = True
                 self.forward = True
         if key == arcade.key.SPACE and self.attack:
-            bullet = Bullet(self.player_1.center_x, self.player_1.center_y, self, 45, self.player_1.change_x)
+            bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle, self.player_1.change_x)
             self.bullets_list.append(bullet)
+            self.bullets_list_to_server.append(bullet)
+
+        if self.attack:
+            if key == arcade.key.UP:
+                if self.aim.angle > -90:
+                    self.aim.angle -= 5
+            if key == arcade.key.DOWN:
+                if -90 <= self.aim.angle < 0:
+                    self.aim.angle += 5
 
     def on_key_release(self, key, modifiers):
         if key in [arcade.key.LEFT, arcade.key.RIGHT]:

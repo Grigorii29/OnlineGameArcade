@@ -7,7 +7,7 @@ from math import cos, sin, radians, acos, degrees
 class Bullet(arcade.Sprite):
     def __init__(self, x, y, game, angle, player_speed_x):
         super().__init__()
-        self.speed = 10
+        self.speed = 15
         self.angle = self.angle
         self.texture = arcade.load_texture("Files/Bullets images/Bullet0.png")
         self.center_x, self.center_y = x, y
