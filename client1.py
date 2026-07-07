@@ -17,7 +17,6 @@ class Client1(arcade.View):
         arcade.schedule(self.get_coord, UPDATE_TIME)
         arcade.schedule(self.post_coord, UPDATE_TIME)
 
-
         self.players_list = arcade.SpriteList()  # Создаем спрайтлист, танки, добавляем их в список
         self.player_1 = GreenTank(100, 420, self)
         self.player_2 = GrayTank(0, 0, self)
@@ -25,6 +24,7 @@ class Client1(arcade.View):
         self.players_list.append(self.player_2)
 
         self.bullets_list = arcade.SpriteList()
+        self.blast_list = arcade.SpriteList() # Список анимаций взрывов
 
 
         self.map_setup()
@@ -63,6 +63,7 @@ class Client1(arcade.View):
         self.land_list.draw()
         self.players_list.draw()
         self.bullets_list.draw()
+        self.blast_list.draw()
 
     def on_update(self, delta_t):
         self.engine.update()
@@ -71,6 +72,7 @@ class Client1(arcade.View):
         self.update_speed()
         self.camera_update(delta_t)
         self.bullets_list.update()
+        self.blast_list.update()
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.F:
