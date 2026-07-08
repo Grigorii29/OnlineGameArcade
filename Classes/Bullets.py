@@ -5,10 +5,10 @@ from math import cos, sin, radians, acos, degrees
 
 
 class Bullet(arcade.Sprite):
-    def __init__(self, x, y, game, angle, player_speed_x):
+    def __init__(self, x, y, game, angle):
         super().__init__()
         self.speed = 15
-        self.angle = self.angle
+        self.angle = angle
         self.texture = arcade.load_texture("Files/Bullets images/Bullet0.png")
         self.center_x, self.center_y = x, y
         self.game = game
@@ -16,7 +16,7 @@ class Bullet(arcade.Sprite):
         self.engine = arcade.PhysicsEngineSimple(self, self.game.collision_list)
 
         self.change_y = sin(radians(angle)) * self.speed
-        self.change_x = cos(radians(angle)) * self.speed + player_speed_x
+        self.change_x = cos(radians(angle)) * self.speed
 
     def update(self, delta_t):
         upd = self.engine.update()

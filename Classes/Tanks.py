@@ -10,6 +10,7 @@ class GreenTank(arcade.Sprite):
         self.center_x = x
         self.center_y = y
         self.scale = TANK_SKALE
+        self.hp = 1000
 
     def on_update(self, dt):
         self.center_x += self.change_x * dt
@@ -24,6 +25,8 @@ class GrayTank(arcade.Sprite):
         self.center_y = y
         self.scale_x = -TANK_SKALE
         self.scale_y = TANK_SKALE
+        self.hp = 1000
+
 
     def on_update(self, dt):
         self.center_x += self.change_x * dt

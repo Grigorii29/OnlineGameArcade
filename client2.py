@@ -3,6 +3,8 @@ import arcade
 
 from Classes.Tanks import GreenTank, GrayTank
 from Classes.CONSTANTES import *
+from Classes.Blast import Blast
+from Classes.Bullets import Bullet
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -14,15 +16,18 @@ UPDATE_TIME = 0.05
 class Client2(arcade.View):
     def __init__(self):
         super().__init__()
-        # arcade.draw_circle_filled(100, 100, 50, arcade.color.SKY_BLUE)
         arcade.schedule(self.get_coord, UPDATE_TIME)  # автопроверка координат первого игрока
         arcade.schedule(self.post_coord, UPDATE_TIME)  # автоотправка координат
+        arcade.schedule(self.get_bullets_from_player_1, UPDATE_TIME)
 
         self.players_list = arcade.SpriteList()
         self.player_1 = GreenTank(0, 0, self)
         self.player_2 = GrayTank(8300, 420, self)
         self.players_list.append(self.player_1)
         self.players_list.append(self.player_2)
+
+        self.player_1_bullets_list = arcade.SpriteList()  # Список, в котором хранятся пули 1-го игрока
+        self.blast_list = arcade.SpriteList()  # Спрайтлист взрывов
 
         self.map_setup()
         self.accel = False  # Флаг ускорения
@@ -53,6 +58,12 @@ class Client2(arcade.View):
         except Exception:
             pass
 
+    def get_bullets_from_player_1(self, delta_t):
+        response = requests.get(server_address + '/bullets_from_player_1').json()['Bullets']
+        for el in response:
+            if el[3] == 'Bullet':
+                self.player_1_bullets_list.append(Bullet(el[0], el[1], self, el[2]))
+
     def on_draw(self):
         self.clear()
         self.camera_shake.update_camera()  # Запчасть от тряски камеры
@@ -60,6 +71,8 @@ class Client2(arcade.View):
         self.details_list.draw()
         self.land_list.draw()
         self.players_list.draw()
+        self.player_1_bullets_list.draw()
+        self.blast_list.draw()
 
     def on_update(self, delta_t):
         self.engine.update()
@@ -67,6 +80,9 @@ class Client2(arcade.View):
         self.players_list.update(delta_t)
         self.update_speed()
         self.camera_update(delta_t)
+        self.player_1_bullets_list.update()
+        self.blast_list.update()
+        if not self.accel:
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.LEFT:  # Отличается логикой от первого клинета, т.к. танк 2-го игрока едет в другую сторону
@@ -102,8 +118,8 @@ class Client2(arcade.View):
             elif self.accel is False and self.player_2.change_x < 0:
                 self.player_2.change_x += SPEED_DELTA
 
-            if 0 < abs(self.player_2.change_x) <= 0.05:
-                self.player_1.change_x = 0
+            if 0 < abs(self.player_2.change_x) < SPEED_DELTA:
+                self.player_2.change_x = 0
 
     def camera_update(self, delta_t):
         self.camera_shake.update(delta_t)

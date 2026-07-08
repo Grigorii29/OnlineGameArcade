@@ -50,8 +50,16 @@ def get_coord_player_2():
 @blueprint.route('/bullets_from_player_1', methods=['POST'])
 def bullets_player_1():
     global bullets_from_player_1
-    print(request.json)
+    for el in request.json['bullets']:
+        bullets_from_player_1.append(el)
     return jsonify({'Status': 'OK'})
+
+@blueprint.route('/bullets_from_player_1', methods=['GET'])
+def return_bullets_player_1():
+    global bullets_from_player_1
+    cop = bullets_from_player_1.copy()
+    bullets_from_player_1 = []
+    return jsonify({'Bullets': cop})
 
 
 
