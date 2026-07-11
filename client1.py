@@ -3,7 +3,7 @@ import arcade
 
 from Classes.CONSTANTES import *
 from Classes.Tanks import GreenTank, GrayTank
-from Classes.Bullets import Bullet
+from Classes.Bullets import Bullet, Bullet2
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -13,8 +13,10 @@ class Client1(arcade.View):
     def __init__(self):
         super().__init__()
         self.attack = False  # Флаг состояния атака или нет.
-        arcade.schedule(self.get_coord, UPDATE_TIME)
+
+        arcade.schedule(self.get_coord, UPDATE_TIME)  # Делаем запросы на сервер постоянными
         arcade.schedule(self.post_coord, UPDATE_TIME)
+        arcade.schedule(self.get_bullets_from_player_2, UPDATE_TIME)
         arcade.schedule(self.post_bullet, UPDATE_TIME)
 
         self.players_list = arcade.SpriteList()  # Создаем спрайтлист, танки, добавляем их в список
@@ -24,6 +26,8 @@ class Client1(arcade.View):
         self.players_list.append(self.player_2)
 
         self.bullets_list = arcade.SpriteList()
+        self.player_1_bullets_list = arcade.SpriteList()  # Список, в котором хранятся пули 1-го игрока
+        self.player_2_bullets_list = arcade.SpriteList()
         self.blast_list = arcade.SpriteList()  # Список анимаций взрывов
         self.bullets_list_to_server = []
 
@@ -61,10 +65,15 @@ class Client1(arcade.View):
         except Exception:
             pass
 
-    def post_bullet(self, delta_t):
+    def get_bullets_from_player_2(self, delta_t):
+        response = requests.get(server_address + '/bullets_to_player_1').json()['Bullets']
+        for el in response:
+            if el[3] == 'Bullet2':
+                self.player_2_bullets_list.append(Bullet2(el[0], el[1], self, el[2]))
 
+    def post_bullet(self, delta_t):
         try:
-            print(self.bullets_list_to_server)
+            # print(self.bullets_list_to_server)
             request = requests.post(server_address + '/bullets_from_player_1', json={
                 'bullets': self.bullets_list_to_server
             })
@@ -80,7 +89,8 @@ class Client1(arcade.View):
         self.land_list.draw()
         self.players_list.draw()
         self.aim_list.draw()
-        self.bullets_list.draw()
+        self.player_1_bullets_list.draw()
+        self.player_2_bullets_list.draw()
         self.blast_list.draw()
 
     def on_update(self, delta_t):
@@ -89,7 +99,8 @@ class Client1(arcade.View):
         self.players_list.update(delta_t)
         self.update_speed()
         self.camera_update(delta_t)
-        self.bullets_list.update()
+        self.player_1_bullets_list.update()
+        self.player_2_bullets_list.update()
         self.blast_list.update()
 
         if self.attack:
@@ -114,9 +125,9 @@ class Client1(arcade.View):
                 self.forward = True
         if key == arcade.key.SPACE and self.attack:
             bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
-            self.bullets_list.append(bullet)
+            self.player_1_bullets_list.append(bullet)
             self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
-            print([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
+            # print([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
 
         if self.attack:
             if key == arcade.key.UP:

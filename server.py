@@ -6,6 +6,8 @@ app = Flask(__name__)
 player_1 = [0, 420, 1000]
 player_2 = [100, 450, 1000]
 bullets_from_player_1 = []
+bullets_from_player_2 = []
+
 blueprint = Blueprint(
     'players',
     __name__,
@@ -48,19 +50,34 @@ def get_coord_player_2():
 
 
 @blueprint.route('/bullets_from_player_1', methods=['POST'])
-def bullets_player_1():
+def get_bullets_from_player_1():
     global bullets_from_player_1
     for el in request.json['bullets']:
         bullets_from_player_1.append(el)
     return jsonify({'Status': 'OK'})
 
-@blueprint.route('/bullets_from_player_1', methods=['GET'])
-def return_bullets_player_1():
+
+@blueprint.route('/bullets_to_player_1', methods=['GET'])
+def post_bullets_to_player_2():
+    global bullets_from_player_2
+    cop = bullets_from_player_2.copy()
+    bullets_from_player_2 = []
+    return jsonify({'Bullets': cop})
+
+@blueprint.route('/bullets_from_player_2', methods=['POST'])
+def get_bullets_from_player_2():
+    global bullets_from_player_2
+    for el in request.json['bullets']:
+        bullets_from_player_2.append(el)
+    return jsonify({'Status': 'OK'})
+
+
+@blueprint.route('/bullets_to_player_2', methods=['GET'])
+def post_bullets_to_player_1():
     global bullets_from_player_1
     cop = bullets_from_player_1.copy()
     bullets_from_player_1 = []
     return jsonify({'Bullets': cop})
-
 
 
 app.register_blueprint(blueprint)
