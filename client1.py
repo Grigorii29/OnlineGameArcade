@@ -68,6 +68,7 @@ class Client1(arcade.View):
     def get_bullets_from_player_2(self, delta_t):
         response = requests.get(server_address + '/bullets_to_player_1').json()['Bullets']
         for el in response:
+            print(el)
             if el[3] == 'Bullet2':
                 self.player_2_bullets_list.append(Bullet2(el[0], el[1], self, el[2]))
 
@@ -102,6 +103,7 @@ class Client1(arcade.View):
         self.player_1_bullets_list.update()
         self.player_2_bullets_list.update()
         self.blast_list.update()
+        # print(arcade.check_for_collision_with_list(self.player_1, self.player_2_bullets_list))
 
         if self.attack:
             self.aim.center_x = self.player_1.center_x + 40

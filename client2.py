@@ -21,7 +21,7 @@ class Client2(arcade.View):
 
         self.players_list = arcade.SpriteList()
         self.player_1 = GreenTank(0, 0, self)
-        self.player_2 = GrayTank(8300, 420, self)
+        self.player_2 = GrayTank(80, 420, self)
         self.players_list.append(self.player_1)
         self.players_list.append(self.player_2)
 
@@ -70,6 +70,7 @@ class Client2(arcade.View):
         response = requests.get(server_address + '/bullets_to_player_2').json()['Bullets']
         for el in response:
             if el[3] == 'Bullet':
+                print(el)
                 self.player_1_bullets_list.append(Bullet(el[0], el[1], self, el[2]))
 
     def post_bullet(self, delta_t):
