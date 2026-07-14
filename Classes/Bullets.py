@@ -23,11 +23,16 @@ class Bullet(arcade.Sprite):
         if upd:
             self.remove_from_sprite_lists()
             self.game.blast_list.append(Blast(self.center_x, self.center_y))
-        current_speed = (self.change_x ** 2 + self.change_y ** 2) ** 0.5 # Расчёт текущей скорости, чтобы определить угол
+        current_speed = (
+                                    self.change_x ** 2 + self.change_y ** 2) ** 0.5  # Расчёт текущей скорости, чтобы определить угол
         self.angle = degrees(acos(self.change_x / current_speed))
         if self.change_y > 0:
             self.angle *= -1
         self.change_y -= GRAVITY
+
+    def start_blast(self):
+        self.remove_from_sprite_lists()
+        self.game.blast_list.append(Blast(self.center_x, self.center_y))
 
 
 class Bullet2(arcade.Sprite):
@@ -49,8 +54,13 @@ class Bullet2(arcade.Sprite):
         if upd:
             self.remove_from_sprite_lists()
             self.game.blast_list.append(Blast(self.center_x, self.center_y))
-        current_speed = (self.change_x ** 2 + self.change_y ** 2) ** 0.5 # Расчёт текущей скорости, чтобы определить угол
+        current_speed = (
+                                    self.change_x ** 2 + self.change_y ** 2) ** 0.5  # Расчёт текущей скорости, чтобы определить угол
         self.angle = degrees(acos(self.change_x / current_speed))
         if self.change_y > 0:
             self.angle *= -1
         self.change_y -= GRAVITY
+
+    def start_blast(self):
+        self.remove_from_sprite_lists()
+        self.game.blast_list.append(Blast(self.center_x, self.center_y))

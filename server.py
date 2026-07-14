@@ -2,10 +2,8 @@ from flask import Flask, Blueprint, jsonify, request
 import sqlite3
 
 app = Flask(__name__)
-player_1 = [0, 420, 1000]
-player_2 = [100, 450, 1000]
-bullets_from_player_1 = []
-bullets_from_player_2 = []
+player_1 = [0, 420, 100]
+player_2 = [100, 450, 100]
 
 blueprint = Blueprint(
     'players',
@@ -19,7 +17,8 @@ def return_coord_player1():
     return jsonify(
         {
             'x': player_1[0],
-            'y': player_1[1]
+            'y': player_1[1],
+            'hp': player_1[2]
         }
     )
 
@@ -27,7 +26,7 @@ def return_coord_player1():
 @blueprint.route('/player1', methods=['POST'])
 def get_coord_player_1():
     global player_1
-    player_1 = [request.json['x'], request.json['y']]
+    player_1 = [request.json['x'], request.json['y'], request.json['hp']]
     return jsonify({"Status": 'OK'})
 
 
@@ -36,7 +35,8 @@ def return_coord_player_2():
     return jsonify(
         {
             'x': player_2[0],
-            'y': player_2[1]
+            'y': player_2[1],
+            'hp': player_2[2]
         }
     )
 
@@ -44,17 +44,17 @@ def return_coord_player_2():
 @blueprint.route('/player2', methods=['POST'])
 def get_coord_player_2():
     global player_2
-    player_2 = [request.json['x'], request.json['y']]
+    player_2 = [request.json['x'], request.json['y'], request.json['hp']]
     return jsonify({'Status': 'OK'})
 
 
 @blueprint.route('/bullets_from_player_1', methods=['POST'])
 def get_bullets_from_player_1():
-    global bullets_from_player_1
+    # global bullets_from_player_1
     con = sqlite3.connect('Files/Bullets.db')
     cur = con.cursor()
     for el in request.json['bullets']:
-        bullets_from_player_1.append(el)
+        # bullets_from_player_1.append(el)
         cur.execute(
             f"""INSERT INTO Bullets_1(center_x, center_y, angle, type, status) 
             VALUES({el[0]}, {el[1]}, {el[2]}, '{el[3]}', 0)""")

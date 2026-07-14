@@ -53,6 +53,7 @@ class Client1(arcade.View):
         try:
             response = requests.get(server_address + '/player2').json()
             self.player_2.center_x, self.player_2.center_y = response['x'], response['y']
+            self.player_2.hp = response['hp']
         except Exception:
             pass
 
@@ -60,7 +61,8 @@ class Client1(arcade.View):
         try:
             response = requests.post(server_address + '/player1', json={
                 'x': self.player_1.center_x,
-                'y': self.player_1.center_y
+                'y': self.player_1.center_y,
+                'hp': self.player_1.hp
             })
         except Exception:
             pass
@@ -103,7 +105,7 @@ class Client1(arcade.View):
         self.player_1_bullets_list.update()
         self.player_2_bullets_list.update()
         self.blast_list.update()
-        # print(arcade.check_for_collision_with_list(self.player_1, self.player_2_bullets_list))
+        self.update_bullets()
 
         if self.attack:
             self.aim.center_x = self.player_1.center_x + 40
@@ -213,6 +215,24 @@ class Client1(arcade.View):
 
         # ! Подключаем простой движок к текущему игроку
         self.engine = arcade.PhysicsEngineSimple(self.player_1, self.collision_list)
+
+    def update_bullets(self):
+        for el in arcade.check_for_collision_with_list(self.player_1, self.player_2_bullets_list):
+            el.start_blast()
+            self.player_1.hp -= 15
+
+        # Уменьшение здоровья за столкновение со следом взрыва
+        self.player_1.hp -= 0.5 * len(arcade.check_for_collision_with_list(self.player_1, self.blast_list))
+
+        if self.player_1.hp <= 0:  # Удаляю танк при смерти
+            self.player_1.texture = arcade.load_texture('Files/Green tank/Tank1.png')
+
+        # Для более реалистичной отрисовки проверяю коллизии и для 2-го танка
+        for el in arcade.check_for_collision_with_list(self.player_2, self.player_1_bullets_list):
+            el.start_blast()
+
+        if self.player_2.hp <= 0:
+            self.player_2.texture = arcade.load_texture('Files/Gray tank/Tank1.png')
 
 
 def main():
