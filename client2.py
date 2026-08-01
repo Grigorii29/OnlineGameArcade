@@ -53,6 +53,8 @@ class Client2(arcade.View):
         try:
             response = requests.get(server_address + '/player1').json()
             self.player_1.center_x, self.player_1.center_y = response['x'], response['y']
+            if response['hp'] > self.player_1.hp:
+                self.player_1.revival()
             self.player_1.hp = response['hp']
         except Exception:
             pass
@@ -71,7 +73,6 @@ class Client2(arcade.View):
         response = requests.get(server_address + '/bullets_to_player_2').json()['Bullets']
         for el in response:
             if el[3] == 'Bullet':
-                print(el)
                 self.player_1_bullets_list.append(Bullet(el[0], el[1], self, el[2]))
 
     def post_bullet(self, delta_t):
@@ -110,34 +111,40 @@ class Client2(arcade.View):
             self.aim.center_x = self.player_2.center_x - 40
             self.aim.center_y = self.player_2.center_y + 30
 
-    def on_key_press(self, key, modifiers):
-        if key == arcade.key.F:
-            if self.attack:
-                self.attack = False
-                self.aim.alpha = 0
-            else:
-                self.attack = True
-                self.accel = False
-                self.aim.alpha = 255
-        if not self.attack:
-            if key == arcade.key.LEFT:  # Отличается логикой от первого клинета, т.к. танк 2-го игрока едет в другую сторону
-                self.accel = True
-                self.forward = True
-            elif key == arcade.key.RIGHT:
-                self.accel = True
-                self.forward = False
-        if key == arcade.key.SPACE and self.attack:
-            bullet = Bullet2(self.player_2.center_x - 40, self.player_2.center_y + 30, self, - self.aim.angle)
-            self.player_2_bullets_list.append(bullet)
-            self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet2'])
 
-        if self.attack:
-            if key == arcade.key.UP:
-                if self.aim.angle < 270:
-                    self.aim.angle += 5
-            if key == arcade.key.DOWN:
-                if 180 < self.aim.angle <= 270:
-                    self.aim.angle -= 5
+    def on_key_press(self, key, modifiers):
+        if self.player_2.hp > 0:
+            if key == arcade.key.F:
+                if self.attack:
+                    self.attack = False
+                    self.aim.alpha = 0
+                else:
+                    self.attack = True
+                    self.accel = False
+                    self.aim.alpha = 255
+            if not self.attack:
+                if key == arcade.key.LEFT:  # Отличается логикой от первого клинета, т.к. танк 2-го игрока едет в другую сторону
+                    self.accel = True
+                    self.forward = True
+                elif key == arcade.key.RIGHT:
+                    self.accel = True
+                    self.forward = False
+            if key == arcade.key.SPACE and self.attack:
+                bullet = Bullet2(self.player_2.center_x - 40, self.player_2.center_y + 30, self, - self.aim.angle)
+                self.player_2_bullets_list.append(bullet)
+                self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet2'])
+
+            if self.attack:
+                if key == arcade.key.UP:
+                    if self.aim.angle < 270:
+                        self.aim.angle += 5
+                if key == arcade.key.DOWN:
+                    if 180 < self.aim.angle <= 270:
+                        self.aim.angle -= 5
+        else:
+            if key == arcade.key.R:
+                self.player_2.revival()
+                self.attack = False
 
     def on_key_release(self, key, modifiers):
         if key in [arcade.key.LEFT, arcade.key.RIGHT]:
@@ -220,14 +227,10 @@ class Client2(arcade.View):
 
         self.player_2.hp -= 0.5 * len(arcade.check_for_collision_with_list(self.player_2, self.blast_list))
 
-        if self.player_2.hp <= 0:
-            self.player_2.texture = arcade.load_texture('Files/Gray tank/Tank1.png')
 
         for el in arcade.check_for_collision_with_list(self.player_1, self.player_2_bullets_list):
             el.start_blast()
 
-        if self.player_1.hp <= 0:
-            self.player_1.texture = arcade.load_texture('Files/Green tank/Tank1.png')
 
 
 def main():

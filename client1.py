@@ -53,6 +53,8 @@ class Client1(arcade.View):
         try:
             response = requests.get(server_address + '/player2').json()
             self.player_2.center_x, self.player_2.center_y = response['x'], response['y']
+            if response['hp'] > self.player_2.hp:
+                self.player_2.revival()
             self.player_2.hp = response['hp']
         except Exception:
             pass
@@ -70,13 +72,11 @@ class Client1(arcade.View):
     def get_bullets_from_player_2(self, delta_t):
         response = requests.get(server_address + '/bullets_to_player_1').json()['Bullets']
         for el in response:
-            print(el)
             if el[3] == 'Bullet2':
                 self.player_2_bullets_list.append(Bullet2(el[0], el[1], self, el[2]))
 
     def post_bullet(self, delta_t):
         try:
-            # print(self.bullets_list_to_server)
             request = requests.post(server_address + '/bullets_from_player_1', json={
                 'bullets': self.bullets_list_to_server
             })
@@ -112,34 +112,39 @@ class Client1(arcade.View):
             self.aim.center_y = self.player_1.center_y + 30
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.F:
-            if self.attack:
-                self.attack = False
-                self.aim.alpha = 0
-            else:
-                self.attack = True
-                self.accel = False
-                self.aim.alpha = 255  # Обработка появления прицела
-        if not self.attack:
-            if key == arcade.key.LEFT:
-                self.accel = True
-                self.forward = False
-            elif key == arcade.key.RIGHT:
-                self.accel = True
-                self.forward = True
-        if key == arcade.key.SPACE and self.attack:
-            bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
-            self.player_1_bullets_list.append(bullet)
-            self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
-            # print([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
+        if self.player_1.hp > 0:
+            if key == arcade.key.F:
+                if self.attack:
+                    self.attack = False
+                    self.aim.alpha = 0
+                else:
+                    self.attack = True
+                    self.accel = False
+                    self.aim.alpha = 255  # Обработка появления прицела
+            if not self.attack:
+                if key == arcade.key.LEFT:
+                    self.accel = True
+                    self.forward = False
+                elif key == arcade.key.RIGHT:
+                    self.accel = True
+                    self.forward = True
+            if key == arcade.key.SPACE and self.attack:
+                bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
+                self.player_1_bullets_list.append(bullet)
+                self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
 
-        if self.attack:
-            if key == arcade.key.UP:
-                if self.aim.angle > -90:
-                    self.aim.angle -= 5
-            if key == arcade.key.DOWN:
-                if -90 <= self.aim.angle < 0:
-                    self.aim.angle += 5
+            if self.attack:
+                if key == arcade.key.UP:
+                    if self.aim.angle > -90:
+                        self.aim.angle -= 5
+                if key == arcade.key.DOWN:
+                    if -90 <= self.aim.angle < 0:
+                        self.aim.angle += 5
+        else:
+            if key == arcade.key.R:
+                self.player_1.revival()
+                self.attack = False
+
 
     def on_key_release(self, key, modifiers):
         if key in [arcade.key.LEFT, arcade.key.RIGHT]:
@@ -155,10 +160,10 @@ class Client1(arcade.View):
             self.player_1.center_x = 8390
 
         else:
-            if self.accel and self.forward and abs(self.player_1.change_x) < 3:
+            if self.accel and self.forward and abs(self.player_1.change_x) < 6:
                 self.player_1.change_x += SPEED_DELTA
 
-            elif self.accel and not self.forward and abs(self.player_1.change_x) < 3:
+            elif self.accel and not self.forward and abs(self.player_1.change_x) < 6:
                 self.player_1.change_x -= SPEED_DELTA
 
             if self.accel is False and self.player_1.change_x > 0:
@@ -224,15 +229,11 @@ class Client1(arcade.View):
         # Уменьшение здоровья за столкновение со следом взрыва
         self.player_1.hp -= 0.5 * len(arcade.check_for_collision_with_list(self.player_1, self.blast_list))
 
-        if self.player_1.hp <= 0:  # Удаляю танк при смерти
-            self.player_1.texture = arcade.load_texture('Files/Green tank/Tank1.png')
 
         # Для более реалистичной отрисовки проверяю коллизии и для 2-го танка
         for el in arcade.check_for_collision_with_list(self.player_2, self.player_1_bullets_list):
             el.start_blast()
 
-        if self.player_2.hp <= 0:
-            self.player_2.texture = arcade.load_texture('Files/Gray tank/Tank1.png')
 
 
 def main():

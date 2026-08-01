@@ -95,9 +95,6 @@ def post_bullets_to_player_2():
     cur.execute("""UPDATE Bullets_1 SET status=1 WHERE status=0""")
     con.commit()
     con.close()
-    print('---------------------------------')
-    print(bullets_to_send)
-    print('------------------------------')
     return jsonify({'Bullets': bullets_to_send})
 
 
