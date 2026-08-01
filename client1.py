@@ -3,7 +3,7 @@ import arcade
 
 from Classes.CONSTANTES import *
 from Classes.Tanks import GreenTank, GrayTank
-from Classes.Bullets import Bullet, Bullet2
+from Classes.Bullets import Bullet, Bullet2, Rocket
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -36,6 +36,8 @@ class Client1(arcade.View):
         self.aim.scale = 0.3
         self.aim_list = arcade.SpriteList()
         self.aim_list.append(self.aim)
+
+        self.current_bullet = 'Bullet'
 
         self.map_setup()
         self.accel = False  # Флаг ускорения
@@ -117,10 +119,14 @@ class Client1(arcade.View):
                 if self.attack:
                     self.attack = False
                     self.aim.alpha = 0
+                    self.camera.zoom = 1
+
                 else:
                     self.attack = True
                     self.accel = False
                     self.aim.alpha = 255  # Обработка появления прицела
+                    self.camera.zoom = 0.55
+
             if not self.attack:
                 if key == arcade.key.LEFT:
                     self.accel = True
@@ -129,9 +135,14 @@ class Client1(arcade.View):
                     self.accel = True
                     self.forward = True
             if key == arcade.key.SPACE and self.attack:
-                bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
-                self.player_1_bullets_list.append(bullet)
-                self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
+                if self.current_bullet == 'Bullet':
+                    bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
+                    self.player_1_bullets_list.append(bullet)
+                    self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
+                elif self.current_bullet == 'Rocket':
+                    rocket = Rocket(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
+                    self.player_1_bullets_list.append(rocket)
+                    self.bullets_list_to_server.append([rocket.center_x, rocket.center_y, rocket.angle, 'Rocket'])
 
             if self.attack:
                 if key == arcade.key.UP:
@@ -140,6 +151,10 @@ class Client1(arcade.View):
                 if key == arcade.key.DOWN:
                     if -90 <= self.aim.angle < 0:
                         self.aim.angle += 5
+                if key == 49:
+                    self.current_bullet = 'Bullet'
+                elif key == 50:
+                    self.current_bullet = 'Rocket'
         else:
             if key == arcade.key.R:
                 self.player_1.revival()

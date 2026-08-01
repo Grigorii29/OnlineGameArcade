@@ -12,6 +12,10 @@ class GreenTank(arcade.Sprite):
         self.scale = TANK_SKALE
         self.hp = 100
 
+    # def on_update(self, dt):
+    #     self.center_x += self.change_x * dt
+    #     self.upd()
+
     def update(self, dt):
         if self.hp <= 0:
             self.texture = arcade.load_texture('Files/Green tank/Died.png')

@@ -160,10 +160,10 @@ class Client2(arcade.View):
             self.player_2.center_x = 8390
 
         else:  # Логика не как в клиенте 1 из-за разного направления танков
-            if self.accel and self.forward and abs(self.player_2.change_x) < 3:
+            if self.accel and self.forward and abs(self.player_2.change_x) < 6:
                 self.player_2.change_x -= SPEED_DELTA
 
-            elif self.accel and not self.forward and abs(self.player_2.change_x) < 3:
+            elif self.accel and not self.forward and abs(self.player_2.change_x) < 6:
                 self.player_2.change_x += SPEED_DELTA
 
             if self.accel is False and self.player_2.change_x > 0:
