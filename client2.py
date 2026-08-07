@@ -3,7 +3,7 @@ import arcade
 
 from Classes.Tanks import GreenTank, GrayTank
 from Classes.CONSTANTES import *
-from Classes.Bullets import Bullet, Bullet2
+from Classes.Bullets import Bullet, Rocket
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -36,6 +36,8 @@ class Client2(arcade.View):
         self.aim_list = arcade.SpriteList()
         self.aim_list.append(self.aim)
         self.aim.angle = 180
+
+        self.current_bullet = 'Bullet'
 
         self.map_setup()
         self.accel = False  # Флаг ускорения
@@ -74,6 +76,8 @@ class Client2(arcade.View):
         for el in response:
             if el[3] == 'Bullet':
                 self.player_1_bullets_list.append(Bullet(el[0], el[1], self, el[2]))
+            elif el[3] == 'Rocket':
+                self.player_1_bullets_list.append(Rocket(el[0], el[1], self, el[2]))
 
     def post_bullet(self, delta_t):
         try:
@@ -111,17 +115,19 @@ class Client2(arcade.View):
             self.aim.center_x = self.player_2.center_x - 40
             self.aim.center_y = self.player_2.center_y + 30
 
-
     def on_key_press(self, key, modifiers):
         if self.player_2.hp > 0:
             if key == arcade.key.F:
                 if self.attack:
                     self.attack = False
                     self.aim.alpha = 0
+                    self.camera.zoom = 1
                 else:
                     self.attack = True
                     self.accel = False
                     self.aim.alpha = 255
+                    self.camera.zoom = 0.55
+
             if not self.attack:
                 if key == arcade.key.LEFT:  # Отличается логикой от первого клинета, т.к. танк 2-го игрока едет в другую сторону
                     self.accel = True
@@ -130,9 +136,14 @@ class Client2(arcade.View):
                     self.accel = True
                     self.forward = False
             if key == arcade.key.SPACE and self.attack:
-                bullet = Bullet2(self.player_2.center_x - 40, self.player_2.center_y + 30, self, - self.aim.angle)
-                self.player_2_bullets_list.append(bullet)
-                self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet2'])
+                if self.current_bullet == 'Bullet':
+                    bullet = Bullet(self.player_2.center_x - 40, self.player_2.center_y + 30, self, - self.aim.angle)
+                    self.player_2_bullets_list.append(bullet)
+                    self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
+                elif self.current_bullet == 'Rocket':
+                    rocket = Rocket(self.player_2.center_x - 40, self.player_2.center_y + 30, self, - self.aim.angle)
+                    self.player_2_bullets_list.append(rocket)
+                    self.bullets_list_to_server.append([rocket.center_x, rocket.center_y, rocket.angle, 'Rocket'])
 
             if self.attack:
                 if key == arcade.key.UP:
@@ -141,9 +152,15 @@ class Client2(arcade.View):
                 if key == arcade.key.DOWN:
                     if 180 < self.aim.angle <= 270:
                         self.aim.angle -= 5
+                if key == 49:
+                    self.current_bullet = 'Bullet'
+                elif key == 50:
+                    self.current_bullet = 'Rocket'
         else:
             if key == arcade.key.R:
                 self.player_2.revival()
+                self.aim.alpha = 0
+                self.camera.zoom = 1
                 self.attack = False
 
     def on_key_release(self, key, modifiers):
@@ -160,10 +177,10 @@ class Client2(arcade.View):
             self.player_2.center_x = 8390
 
         else:  # Логика не как в клиенте 1 из-за разного направления танков
-            if self.accel and self.forward and abs(self.player_2.change_x) < 6:
+            if self.accel and self.forward and abs(self.player_2.change_x) < MAX_SPEED:
                 self.player_2.change_x -= SPEED_DELTA
 
-            elif self.accel and not self.forward and abs(self.player_2.change_x) < 6:
+            elif self.accel and not self.forward and abs(self.player_2.change_x) < MAX_SPEED:
                 self.player_2.change_x += SPEED_DELTA
 
             if self.accel is False and self.player_2.change_x > 0:
@@ -222,15 +239,23 @@ class Client2(arcade.View):
 
     def update_bullets(self):
         for el in arcade.check_for_collision_with_list(self.player_2, self.player_1_bullets_list):
+            if type(el) == Bullet:
+                self.player_2.hp -= el.damage
+            elif type(el) == Rocket:
+                self.player_2.hp -= el.damage
             el.start_blast()
-            self.player_2.hp -= 15
+
 
         self.player_2.hp -= 0.5 * len(arcade.check_for_collision_with_list(self.player_2, self.blast_list))
 
+        if self.player_2.hp <= 0:
+            self.player_2.texture = arcade.load_texture('Files/Gray tank/Died.png')
 
         for el in arcade.check_for_collision_with_list(self.player_1, self.player_2_bullets_list):
             el.start_blast()
 
+        if self.player_1.hp <= 0:
+            self.player_1.texture = arcade.load_texture('Files/Green tank/Died.png')
 
 
 def main():

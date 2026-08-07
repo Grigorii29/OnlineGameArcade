@@ -4,6 +4,7 @@ UPDATE_TIME = 0.05
 TANK_SKALE = 0.8
 SPEED_DELTA = 0.3
 CAMERA_LERP = 0.15
+MAX_SPEED = 3
 GRAVITY = 0.5
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]

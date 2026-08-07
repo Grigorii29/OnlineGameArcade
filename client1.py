@@ -3,7 +3,7 @@ import arcade
 
 from Classes.CONSTANTES import *
 from Classes.Tanks import GreenTank, GrayTank
-from Classes.Bullets import Bullet, Bullet2, Rocket
+from Classes.Bullets import Bullet, Rocket
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -74,8 +74,10 @@ class Client1(arcade.View):
     def get_bullets_from_player_2(self, delta_t):
         response = requests.get(server_address + '/bullets_to_player_1').json()['Bullets']
         for el in response:
-            if el[3] == 'Bullet2':
-                self.player_2_bullets_list.append(Bullet2(el[0], el[1], self, el[2]))
+            if el[3] == 'Bullet':
+                self.player_2_bullets_list.append(Bullet(el[0], el[1], self, el[2]))
+            elif el[3] == 'Rocket':
+                self.player_2_bullets_list.append(Rocket(el[0], el[1], self, el[2]))
 
     def post_bullet(self, delta_t):
         try:
@@ -158,8 +160,9 @@ class Client1(arcade.View):
         else:
             if key == arcade.key.R:
                 self.player_1.revival()
+                self.aim.alpa = 0
+                self.camera.zoom = 1
                 self.attack = False
-
 
     def on_key_release(self, key, modifiers):
         if key in [arcade.key.LEFT, arcade.key.RIGHT]:
@@ -175,10 +178,10 @@ class Client1(arcade.View):
             self.player_1.center_x = 8390
 
         else:
-            if self.accel and self.forward and abs(self.player_1.change_x) < 6:
+            if self.accel and self.forward and abs(self.player_1.change_x) < MAX_SPEED:
                 self.player_1.change_x += SPEED_DELTA
 
-            elif self.accel and not self.forward and abs(self.player_1.change_x) < 6:
+            elif self.accel and not self.forward and abs(self.player_1.change_x) < MAX_SPEED:
                 self.player_1.change_x -= SPEED_DELTA
 
             if self.accel is False and self.player_1.change_x > 0:
@@ -239,16 +242,25 @@ class Client1(arcade.View):
     def update_bullets(self):
         for el in arcade.check_for_collision_with_list(self.player_1, self.player_2_bullets_list):
             el.start_blast()
-            self.player_1.hp -= 15
+            self.player_1.hp -= el.damage
 
         # Уменьшение здоровья за столкновение со следом взрыва
         self.player_1.hp -= 0.5 * len(arcade.check_for_collision_with_list(self.player_1, self.blast_list))
 
+        # Текстура смерти
+        if self.player_1.hp < 0:
+            print('qweqweqwe')
+            self.player_1.texture = arcade.load_texture('Files/Green tank/Died.png')
+            self.player_1.hp = 0
 
         # Для более реалистичной отрисовки проверяю коллизии и для 2-го танка
         for el in arcade.check_for_collision_with_list(self.player_2, self.player_1_bullets_list):
             el.start_blast()
 
+        # Отрисовка смерти оппонента
+        if self.player_2.hp < 0:
+            self.player_2.hp = 0
+            self.player_2.texture = arcade.load_texture('Files/Gray tank/Died.png')
 
 
 def main():
