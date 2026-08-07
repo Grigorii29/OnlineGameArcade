@@ -43,7 +43,7 @@ class Rocket(arcade.Sprite):
         self.angle = angle
         self.scale = TANK_SKALE
         self.damage = 30
-        if 40 <= self.angle <= 50:
+        if 40 <= self.angle <= 50 or -230 <= self.angle <= -220:
             self.texture = arcade.load_texture("Files/Bullets images/Rocket0_fly.png")
             self.center_x, self.center_y = x + 20, y + 20
         else:

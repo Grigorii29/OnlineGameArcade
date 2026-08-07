@@ -24,6 +24,11 @@ class GreenTank(arcade.Sprite):
         self.center_y = 420
         self.hp = 100
         self.texture = arcade.load_texture('Files/Green tank/Tank0.png')
+        if self.game.cl == 'client1':
+            self.game.count_shells = {
+                'Rockets': 10,
+                'Bullet': 30
+            }
 
 
 class GrayTank(arcade.Sprite):
@@ -41,7 +46,12 @@ class GrayTank(arcade.Sprite):
         self.center_x += self.change_x * dt
 
     def revival(self):  # Функция оживления
-        self.center_x = 100
+        self.center_x = 8200
         self.center_y = 420
         self.hp = 100
         self.texture = arcade.load_texture('Files/Gray tank/Tank0.png')
+        if self.game.cl == 'client2':
+            self.game.count_shells = {
+                'Rockets': 10,
+                'Bullet': 30
+            }

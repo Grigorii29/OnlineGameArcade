@@ -1,9 +1,13 @@
+from zipfile import stringEndArchive64
+
 import requests
 import arcade
 
 from Classes.CONSTANTES import *
 from Classes.Tanks import GreenTank, GrayTank
 from Classes.Bullets import Bullet, Rocket
+
+from pyglet.graphics import Batch
 
 with open('Screen size.txt') as f:
     SCREEN_WIDTH, SCREEN_HEIGHT = [int(line) for line in f]
@@ -13,6 +17,7 @@ class Client1(arcade.View):
     def __init__(self):
         super().__init__()
         self.attack = False  # Флаг состояния атака или нет.
+        self.cl = 'client1' # Для проверки при восстановлении танков
 
         arcade.schedule(self.get_coord, UPDATE_TIME)  # Делаем запросы на сервер постоянными
         arcade.schedule(self.post_coord, UPDATE_TIME)
@@ -39,6 +44,27 @@ class Client1(arcade.View):
 
         self.current_bullet = 'Bullet'
 
+        self.batch = Batch()
+
+        self.gui_camera = arcade.camera.Camera2D()
+
+        self.score = [0, 0]
+
+        self.shells_list = arcade.SpriteList()
+        self.shell_rocket = arcade.Sprite('Files/Bullets images/Rocket0.png', scale=0.7, angle = -45)
+        self.shell_rocket.center_x, self.shell_rocket.center_y = SCREEN_WIDTH // 2 + 25, 100
+        self.shells_list.append(self.shell_rocket)
+
+        self.shell_bullet = arcade.Sprite('Files/Bullets images/Bullet0.png', scale=0.7, angle = -45)
+        self.shell_bullet.center_x, self.shell_bullet.center_y = SCREEN_WIDTH // 2 - 25, 100
+        self.shells_list.append(self.shell_bullet)
+
+        self.count_shells = {
+            'Rockets': 10,
+            'Bullet': 30
+        }
+
+
         self.map_setup()
         self.accel = False  # Флаг ускорения
         self.forward = False  # Флаг для направления ускорения
@@ -57,6 +83,7 @@ class Client1(arcade.View):
             self.player_2.center_x, self.player_2.center_y = response['x'], response['y']
             if response['hp'] > self.player_2.hp:
                 self.player_2.revival()
+                self.score[0] += 1
             self.player_2.hp = response['hp']
         except Exception:
             pass
@@ -100,6 +127,24 @@ class Client1(arcade.View):
         self.player_2_bullets_list.draw()
         self.blast_list.draw()
 
+        # Отрисовка текста и инвентаря
+        self.gui_camera.use()
+        if self.attack:
+            self.shells_list.draw()
+            if self.current_bullet == 'Bullet':
+                arcade.draw_rect_outline(
+                    arcade.rect.XYWH(self.shell_bullet.center_x, self.shell_bullet.center_y, 48, 48), (255, 255, 255), 4)
+                (arcade.draw_rect_outline
+                 (arcade.rect.XYWH(self.shell_rocket.center_x, self.shell_rocket.center_y, 48, 48), (255, 255, 255), 2))
+            elif self.current_bullet == 'Rocket':
+                arcade.draw_rect_outline(
+                    arcade.rect.XYWH(self.shell_bullet.center_x, self.shell_bullet.center_y, 48, 48), (255, 255, 255), 2)
+                arcade.draw_rect_outline(
+                    arcade.rect.XYWH(self.shell_rocket.center_x, self.shell_rocket.center_y, 48, 48), (255, 255, 255), 4)
+        self.batch.draw()
+
+
+
     def on_update(self, delta_t):
         self.engine.update()
         self.player_1.change_y -= GRAVITY
@@ -110,6 +155,7 @@ class Client1(arcade.View):
         self.player_2_bullets_list.update()
         self.blast_list.update()
         self.update_bullets()
+        self.update_batch()
 
         if self.attack:
             self.aim.center_x = self.player_1.center_x + 40
@@ -138,13 +184,17 @@ class Client1(arcade.View):
                     self.forward = True
             if key == arcade.key.SPACE and self.attack:
                 if self.current_bullet == 'Bullet':
-                    bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
-                    self.player_1_bullets_list.append(bullet)
-                    self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
+                    if self.count_shells['Bullet'] > 0:
+                        bullet = Bullet(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
+                        self.player_1_bullets_list.append(bullet)
+                        self.bullets_list_to_server.append([bullet.center_x, bullet.center_y, bullet.angle, 'Bullet'])
+                        self.count_shells['Bullet'] -= 1
                 elif self.current_bullet == 'Rocket':
-                    rocket = Rocket(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
-                    self.player_1_bullets_list.append(rocket)
-                    self.bullets_list_to_server.append([rocket.center_x, rocket.center_y, rocket.angle, 'Rocket'])
+                    if self.count_shells['Rockets'] > 0:
+                        rocket = Rocket(self.player_1.center_x + 40, self.player_1.center_y + 30, self, -self.aim.angle)
+                        self.player_1_bullets_list.append(rocket)
+                        self.bullets_list_to_server.append([rocket.center_x, rocket.center_y, rocket.angle, 'Rocket'])
+                        self.count_shells['Rockets'] -= 1
 
             if self.attack:
                 if key == arcade.key.UP:
@@ -160,8 +210,9 @@ class Client1(arcade.View):
         else:
             if key == arcade.key.R:
                 self.player_1.revival()
-                self.aim.alpa = 0
+                self.aim.alpha = 0
                 self.camera.zoom = 1
+                self.score[1] += 1
                 self.attack = False
 
     def on_key_release(self, key, modifiers):
@@ -249,7 +300,6 @@ class Client1(arcade.View):
 
         # Текстура смерти
         if self.player_1.hp < 0:
-            print('qweqweqwe')
             self.player_1.texture = arcade.load_texture('Files/Green tank/Died.png')
             self.player_1.hp = 0
 
@@ -261,6 +311,44 @@ class Client1(arcade.View):
         if self.player_2.hp < 0:
             self.player_2.hp = 0
             self.player_2.texture = arcade.load_texture('Files/Gray tank/Died.png')
+
+    def update_batch(self):
+        self.Notification = None
+        self.score_dr = None
+        self.Notification_r = None
+        self.cnt_bul = None
+        self.cnt_rock = None
+
+        self.hp_pl_1 = arcade.Text(
+            f'HP: {self.player_1.hp}',
+            50, SCREEN_HEIGHT - 60, (255, 255, 0), 22, batch=self.batch
+        )
+        self.hp_pl_2 = arcade.Text(
+            f'HP: {self.player_2.hp}',
+            SCREEN_WIDTH - 120, SCREEN_HEIGHT - 60, (255, 255, 0), 22, batch=self.batch
+        )
+        if self.player_1.hp <= 0:
+            self.Notification = arcade.Text(
+                f'You are dead',
+                140, SCREEN_HEIGHT // 2 + 50, (255, 0, 0), 100, batch=self.batch)
+
+            self.Notification_r = arcade.Text(
+                'To respawn, press R',
+                140, SCREEN_HEIGHT // 2 - 50, (255, 0, 0), 100, batch=self.batch)
+        else:
+            self.score_dr = arcade.Text(
+                f'{self.score[0]} : {self.score[1]}',
+                SCREEN_WIDTH // 2, SCREEN_HEIGHT - 90, (255, 255, 255), 65, batch=self.batch
+            )
+        if self.attack:
+            self.cnt_bul = arcade.Text(
+                str(self.count_shells['Bullet']),
+                self.shell_bullet.center_x - 20, self.shell_bullet.center_y - 23, (0, 0, 0), 17, batch=self.batch
+            )
+            self.cnt_rock = arcade.Text(
+                str(self.count_shells['Rockets']),
+                self.shell_rocket.center_x - 20, self.shell_rocket.center_y - 23, (0, 0, 0), 17, batch=self.batch
+            )
 
 
 def main():
